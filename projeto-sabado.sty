@@ -1,0 +1,107 @@
+% =============================================================================
+%  projeto-sabado.sty — preâmbulo comum dos documentos de análise do
+%  esquemático "projeto_sabado" (sequencial de 6 LEDs com NE555 + CD4017B)
+%  Identidade visual: azul petróleo #0D7377, dourado #C9A84C, verde oliva,
+%  charcoal. pdflatex + CircuiTikZ + tcolorbox + siunitx. Vírgula decimal.
+% =============================================================================
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{projeto-sabado}[2026/11/21 v1.0 Preambulo comum projeto_sabado]
+
+\RequirePackage[T1]{fontenc}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[brazil]{babel}
+\RequirePackage{lmodern}
+\RequirePackage{microtype}
+\RequirePackage{amsmath,amssymb}
+\RequirePackage[table]{xcolor}
+\RequirePackage{graphicx}
+\RequirePackage{array,booktabs,tabularx,longtable,multirow,makecell}
+\RequirePackage{enumitem}
+\RequirePackage{caption}
+\RequirePackage{float}
+\RequirePackage{siunitx}
+\RequirePackage[american]{circuitikz}
+\RequirePackage{fontes-padrao}
+\usetikzlibrary{babel,calc,positioning,arrows.meta,shapes.geometric,shapes.misc,
+  fit,backgrounds,decorations.pathreplacing,decorations.markings,patterns}
+\RequirePackage[most]{tcolorbox}
+\RequirePackage{hyperref}
+
+% ----------------------------------------------------------------------------
+% Cores da identidade visual + cores de rede (sempre com redundância textual)
+% ----------------------------------------------------------------------------
+\definecolor{petroleo}{HTML}{0D7377}
+\definecolor{petroleoClaro}{HTML}{E4F2F2}
+\definecolor{dourado}{HTML}{C9A84C}
+\definecolor{douradoEsc}{HTML}{8F6E1F}
+\definecolor{douradoClaro}{HTML}{FBF5E4}
+\definecolor{oliva}{HTML}{556B2F}
+\definecolor{olivaClaro}{HTML}{EEF1EA}
+\definecolor{charcoal}{HTML}{36454F}
+\definecolor{redeVcc}{HTML}{A61E22}
+\definecolor{cinzaNC}{HTML}{8A9499}
+
+% ----------------------------------------------------------------------------
+% siunitx em pt-BR
+% ----------------------------------------------------------------------------
+\sisetup{output-decimal-marker={,}, group-separator={.}, group-minimum-digits=4,
+  per-mode=symbol, exponent-product=\cdot, range-phrase={ a },
+  list-final-separator={ e }, list-pair-separator={ e }}
+
+\hypersetup{colorlinks=true, linkcolor=petroleo, urlcolor=petroleo,
+  citecolor=petroleo, pdfauthor={Projeto técnico assistido por LLM}}
+
+% ----------------------------------------------------------------------------
+% Caixas
+% ----------------------------------------------------------------------------
+\tcbset{psbase/.style={enhanced, breakable, arc=1.5mm, boxrule=0.6pt,
+  left=2.2mm, right=2.2mm, top=1.2mm, bottom=1.2mm,
+  fonttitle=\bfseries\sffamily\small}}
+\newtcolorbox{nota}[1][Nota técnica]{psbase, colback=petroleoClaro,
+  colframe=petroleo, title={#1}}
+\newtcolorbox{achado}[1][Achado de revisão]{psbase, colback=douradoClaro,
+  colframe=douradoEsc, title={#1}}
+\newtcolorbox{dicaprof}[1][Dica do professor]{psbase, colback=olivaClaro,
+  colframe=oliva, title={#1}}
+\newtcolorbox{resposta}[1][Resposta direta]{psbase, colback=white,
+  colframe=petroleo, boxrule=1pt, title={#1}}
+
+% ----------------------------------------------------------------------------
+% Esquemático: fontes, estilos e macros de pino de CI
+%   \pinoE{x}{y}{num}{nome}{coord}  pino saindo pela ESQUERDA da borda (x,y)
+%   \pinoD{x}{y}{num}{nome}{coord}  pino saindo pela DIREITA
+%   \pinoC{x}{y}{num}{nome}{coord}  pino saindo por CIMA
+%   \pinoB{x}{y}{num}{nome}{coord}  pino saindo por BAIXO
+%   \marcaNC{coord}                 marca de "sem conexão" (X) na ponta do pino
+% ----------------------------------------------------------------------------
+\newcommand{\fontepino}{\footnotesize\sffamily}
+\newcommand{\fontenum}{\footnotesize\sffamily\color{charcoal}}
+\newcommand{\comprpino}{0.6}
+\tikzset{
+  ci/.style={draw=charcoal, line width=0.9pt, fill=douradoClaro},
+  rede/.style={font=\footnotesize\sffamily\itshape, inner sep=1.2pt},
+  moldurabloco/.style={draw=petroleo!70, dashed, rounded corners=2mm,
+    line width=0.6pt},
+  titulobloco/.style={font=\footnotesize\sffamily\bfseries, text=petroleo},
+}
+\newcommand{\pinoE}[5]{%
+  \draw (#1,#2) -- ++(-\comprpino,0) coordinate (#5);%
+  \node[font=\fontenum, above, inner sep=1.3pt] at ($(#1,#2)+(-0.42*\comprpino,0)$) {#3};%
+  \node[font=\fontepino, right, inner sep=2pt] at (#1,#2) {#4};}
+\newcommand{\pinoD}[5]{%
+  \draw (#1,#2) -- ++(\comprpino,0) coordinate (#5);%
+  \node[font=\fontenum, above, inner sep=1.3pt] at ($(#1,#2)+(0.42*\comprpino,0)$) {#3};%
+  \node[font=\fontepino, left, inner sep=2pt] at (#1,#2) {#4};}
+\newcommand{\pinoC}[5]{%
+  \draw (#1,#2) -- ++(0,\comprpino) coordinate (#5);%
+  \node[font=\fontenum, right, inner sep=0.8pt] at ($(#1,#2)+(0,0.5*\comprpino)$) {#3};%
+  \node[font=\fontepino, below, inner sep=2pt] at (#1,#2) {#4};}
+\newcommand{\pinoB}[5]{%
+  \draw (#1,#2) -- ++(0,-\comprpino) coordinate (#5);%
+  \node[font=\fontenum, right, inner sep=0.8pt] at ($(#1,#2)+(0,-0.5*\comprpino)$) {#3};%
+  \node[font=\fontepino, above, inner sep=2pt] at (#1,#2) {#4};}
+\newcommand{\marcaNC}[1]{%
+  \draw[line width=0.8pt, charcoal] ($(#1)+(-0.09,-0.09)$) -- ($(#1)+(0.09,0.09)$)
+    ($(#1)+(-0.09,0.09)$) -- ($(#1)+(0.09,-0.09)$);}
+
+\endinput

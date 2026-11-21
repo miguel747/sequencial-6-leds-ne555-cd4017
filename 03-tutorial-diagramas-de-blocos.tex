@@ -1,0 +1,441 @@
+% =============================================================================
+%  03-tutorial-diagramas-de-blocos.tex
+%  Tutorial passo a passo dos diagramas de blocos de funcionamento do
+%  sequencial de 6 LEDs (NE555 + CD4017B) — compilar com pdflatex (2x)
+% =============================================================================
+\documentclass[11pt,a4paper]{article}
+\usepackage[a4paper, left=2.2cm, right=2.2cm, top=2.4cm, bottom=2.3cm,
+  headheight=14pt]{geometry}
+\usepackage{projeto-sabado}
+\usepackage{pdflscape}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{lastpage}
+
+\input{figuras/esquematico.tex}
+\input{figuras/blocos.tex}
+\input{figuras/ne555-interno.tex}
+\input{figuras/cd4017-interno.tex}
+\input{referencias.tex}
+
+\hypersetup{pdftitle={Tutorial — diagramas de blocos do projeto\_sabado (NE555 + CD4017B)}}
+
+\titleformat{\section}{\Large\sffamily\bfseries\color{petroleo}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\sffamily\bfseries\color{charcoal}}{\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\sffamily\color{charcoal}Tutorial · diagramas de blocos · projeto\_sabado}
+\fancyhead[R]{\small\sffamily\color{petroleo}Projeto técnico assistido por LLM}
+\fancyfoot[L]{\scriptsize\sffamily\color{charcoal}Rev. 1.0 · 21/11/2026}
+\fancyfoot[R]{\small\sffamily\thepage/\pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{dourado}\leaders\hrule height \headrulewidth\hfill}}
+\setlist{itemsep=2pt, topsep=4pt}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+% caixa de "o que medir"
+\newtcolorbox{medir}[1][Na bancada: o que medir]{psbase, colback=white,
+  colframe=oliva, boxrule=0.8pt, title={#1}}
+
+% filme da sequência: 6 quadros, um LED aceso por quadro
+\newcommand{\filmeLEDs}{%
+\begin{tikzpicture}[font=\footnotesize\sffamily]
+  \foreach \k in {0,...,5}{
+    \pgfmathsetmacro{\yy}{-\k*0.72}
+    \ifnum\k=0 \def\rotT{$t = 0$}\else\ifnum\k=1 \def\rotT{$t = T$}\else\def\rotT{$t = \k T$}\fi\fi
+    \node[anchor=east] at (-0.35,\yy) {\rotT};
+    \foreach \j in {0,...,5}{
+      \pgfmathtruncatemacro{\aceso}{\j==\k ? 1 : 0}
+      \ifnum\aceso=1
+        \fill[oliva!85!green] (\j*0.9,\yy) circle (0.22);
+        \draw[oliva!60!black, line width=0.6pt] (\j*0.9,\yy) circle (0.22);
+        \foreach \a in {0,45,...,315}{\draw[oliva, line width=0.5pt] ($(\j*0.9,\yy)+(\a:0.29)$) -- ($(\j*0.9,\yy)+(\a:0.37)$);}
+      \else
+        \draw[charcoal!45, line width=0.6pt, fill=white] (\j*0.9,\yy) circle (0.22);
+      \fi
+    }
+    \pgfmathtruncatemacro{\qq}{\k}
+    \node[anchor=west, text=charcoal] at (5.05,\yy) {Q\qq\ alta $\rightarrow$ D\pgfmathparse{int(\k+1)}\pgfmathresult\ acesa};
+  }
+  \foreach \j in {0,...,5}{\node[text=charcoal] at (\j*0.9,0.55) {D\pgfmathparse{int(\j+1)}\pgfmathresult};}
+  \node[anchor=east, text=douradoEsc] at (-0.35,-6*0.72) {$t = 6T$};
+  \node[anchor=west, text=douradoEsc] at (-0.2,-6*0.72)
+    {Q6 sobe por centenas de ns, aciona o RESET e a contagem volta a Q0 (D1)};
+\end{tikzpicture}}
+
+\begin{document}
+
+\begin{tcolorbox}[enhanced, colback=petroleo, colframe=petroleo, arc=2mm,
+  left=6mm, right=6mm, top=5mm, bottom=5mm]
+\color{white}\sffamily
+{\small TUTORIAL PASSO A PASSO}\par\vspace{2mm}
+{\LARGE\bfseries Diagramas de blocos de funcionamento}\par\vspace{1mm}
+{\large Sequencial de 6 LEDs com NE555 e CD4017B (\texttt{projeto\_sabado})}\par\vspace{3mm}
+{\small Cada passo acende um bloco do diagrama, mostra o que entra, o que sai, como o
+bloco funciona por dentro e o que medir na bancada para provar que ele está fazendo o
+trabalho dele.}
+\end{tcolorbox}
+
+\noindent{\small\sffamily\color{charcoal}
+Documentos do conjunto: \textbf{01} Especificação técnica · \textbf{02} Prancha
+ilustrativa A3 · \textbf{03} Tutorial dos diagramas de blocos (este).\hfill Versão 1.0 — 21/11/2026}
+
+\tableofcontents
+
+% =============================================================================
+\section{Como ler um diagrama de blocos}
+% =============================================================================
+Um diagrama de blocos troca componentes por \textbf{funções}. Cada retângulo responde a
+uma pergunta só: “o que este pedaço do circuito faz?”. As setas dizem o que passa de um
+bloco para o outro. Neste tutorial vale a seguinte convenção:
+
+\begin{itemize}
+  \item \textbf{seta cheia:} sinal (informação), como o clock ou as saídas do contador;
+  \item \textbf{linha tracejada vermelha:} energia (VCC), que alimenta os CIs;
+  \item \textbf{bloco preenchido em azul petróleo:} o bloco que está sendo estudado no passo.
+\end{itemize}
+
+O método para qualquer bloco é sempre o mesmo, e vale a pena fixar: \textbf{(1)} o que
+entra, \textbf{(2)} o que sai, \textbf{(3)} qual regra transforma a entrada na saída,
+\textbf{(4)} como provar na bancada que a regra está sendo cumprida.
+
+% =============================================================================
+\section{Passo 0 — o sistema inteiro em uma figura}
+% =============================================================================
+\begin{figure}[H]
+\centering
+\diagramaBlocos
+\caption{Diagrama de blocos completo do sequencial de 6 LEDs.}
+\end{figure}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}L{2.9cm} L{3.0cm} Y L{2.9cm}@{}}
+\toprule
+\textbf{Bloco} & \textbf{Entra} & \textbf{Sai} & \textbf{Componentes} \\
+\midrule
+1 · Alimentação & energia da bateria & VCC $\approx$ \SI{3}{\volt} quando a chave está ligada & BT1, SW1 \\
+2 · Oscilador & VCC & onda quadrada OUT555 de $\approx$ \SI{6,8}{\hertz} & U1, R1, R2, C2, C1 \\
+3 · Contador & CLK (= OUT555) e RESET & Q0 a Q9, só uma em nível alto por vez & U2 \\
+4 · Realimentação & Q6 & RESET & fio do pino 5 ao pino 15 de U2 \\
+5 · Indicação & Q0 a Q5 & luz: um LED aceso por vez & D1–D6, R3 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+A frase que resume tudo: \emph{o oscilador marca o ritmo, o contador decide qual LED
+acende, a realimentação fecha a volta em seis passos e os LEDs mostram o resultado.}
+
+% =============================================================================
+\section{Passo 1 — bloco de alimentação}
+% =============================================================================
+\begin{figure}[H]
+\centering
+\diagramaBlocos[todosapagados, b1/.style={destaque}]
+\end{figure}
+
+\textbf{Entra:} a energia química da bateria CR2032. \textbf{Sai:} a rede VCC, que
+alimenta U1 (pinos 8 e 4) e U2 (pino 16).
+
+\textbf{Como funciona.} O suporte BAT-HLD-001 prende a bateria: o positivo encosta no
+corpo metálico do suporte e o negativo encosta numa ilha de cobre redonda da própria
+placa, ligada ao GND. Do positivo, a energia vai ao pino 1 da chave SW1. Com a chave na
+posição de liga, segundo o símbolo do esquemático, o pino 1 (polo) se conecta ao pino 2 e
+o VCC aparece; na outra posição, o polo vai ao pino 3, que não está ligado a nada, e o
+circuito fica sem energia. Qual terminal é o comum no encapsulamento real ainda precisa
+ser conferido no desenho do fabricante (documento 01, achado A8).
+
+\textbf{O ponto de atenção do bloco.} A bateria entrega cerca de \SI{3}{\volt} nova e
+cai até \SI{2}{\volt} no fim da vida útil. O CD4017B é especificado a partir de
+\SI{3}{\volt} e o NE555 a partir de \SI{4,5}{\volt}~\cite{ne555,cd4017}. Por isso a
+especificação (documento 01, achado A1) recomenda um 555 CMOS, como o LMC555, e
+lembra que trocar só o 555 não resolve o contador: a versão CD74HC4017, de 2 a
+\SI{6}{\volt} e com a mesma pinagem, resolve~\cite{hc4017}.
+
+\begin{medir}
+\begin{itemize}[leftmargin=*]
+  \item Multímetro entre SW1-2 (ou U1-8) e GND, chave ligada: cerca de \SI{3}{\volt}
+  (até \SI{3,2}{\volt} com bateria nova). Chave desligada: \SI{0}{\volt}.
+  \item Se a tensão cai muito quando o circuito oscila, a bateria está no fim ou falta
+  capacitor de desacoplamento (achado A2).
+\end{itemize}
+\end{medir}
+
+% =============================================================================
+\section{Passo 2 — bloco oscilador (NE555 astável)}
+% =============================================================================
+\begin{figure}[H]
+\centering
+\diagramaBlocos[todosapagados, b2/.style={destaque}]
+\end{figure}
+
+\textbf{Entra:} VCC. \textbf{Sai:} a onda quadrada OUT555 (pino 3), que é o clock do
+contador.
+
+\begin{figure}[H]
+\centering
+\neInterno
+\caption{O 555 por dentro, com a ligação externa do projeto.}
+\end{figure}
+
+\subsection{O ciclo em cinco momentos}
+\begin{enumerate}
+  \item \textbf{Ao ligar}, C2 está descarregado (\SI{0}{\volt}). Como o pino 2 (TRIG)
+  está abaixo de $V_{CC}/3$, o comparador B seta o flip-flop: a saída vai para nível
+  alto e o transistor de descarga fica cortado.
+  \item \textbf{Carga.} C2 carrega pelo caminho VCC $\to$ R1 $\to$ R2 $\to$ C2. A tensão
+  $v_C$ sobe em exponencial.
+  \item \textbf{Limiar.} Quando $v_C$ chega a $2V_{CC}/3$, o comparador A reseta o
+  flip-flop: a saída cai e o transistor de descarga conduz, prendendo o pino 7 ao GND.
+  \item \textbf{Descarga.} C2 descarrega pelo caminho C2 $\to$ R2 $\to$ pino 7 $\to$ GND.
+  Repare que R1 continua ligado entre VCC e o pino 7: durante toda a descarga, ele
+  conduz $V_{CC}/R_1 = \SI{3}{\volt}/\SI{1,2}{\kilo\ohm} = \SI{2,5}{\milli\ampere}$ direto
+  para o GND, sem fazer trabalho útil.
+  \item \textbf{Disparo.} Quando $v_C$ cai a $V_{CC}/3$, o comparador B seta o flip-flop
+  de novo, a saída volta para nível alto e o ciclo recomeça no momento 2.
+\end{enumerate}
+
+\subsection{Os números do bloco}
+Os tempos saem das fórmulas do datasheet~\cite{ne555}, com $R_1 = \SI{1,2}{\kilo\ohm}$,
+$R_2 = \SI{10}{\kilo\ohm}$ e $C_2 = \SI{10}{\micro\farad}$:
+\[
+t_H = 0{,}693\,(R_1+R_2)\,C_2 \approx \SI{77,62}{\milli\second},\qquad
+t_L = 0{,}693\,R_2\,C_2 \approx \SI{69,30}{\milli\second},
+\]
+\[
+T = t_H + t_L \approx \SI{146,92}{\milli\second}\;\Rightarrow\; f \approx \SI{6,81}{\hertz},
+\qquad D = \frac{R_1+R_2}{R_1+2R_2} \approx \SI{52,83}{\percent}.
+\]
+O \textbf{primeiro} nível alto, logo depois de ligar, é mais longo, porque C2 parte de
+zero e não de $V_{CC}/3$: $t_{1} = (R_1+R_2)\,C_2\ln 3 \approx 0{,}112 \times 1{,}0986
+\approx \SI{123,04}{\milli\second}$. Daí em diante o circuito entra no regime da tabela.
+
+\begin{dicaprof}
+Duas perguntas que caem muito sobre o 555 astável. \textbf{Por que o ciclo de trabalho
+passa de 50\%?} Porque a carga passa por $R_1 + R_2$ e a descarga só por $R_2$: a carga é
+sempre mais lenta. \textbf{Por que a frequência não depende de $V_{CC}$?} Porque os dois
+limiares são frações fixas de $V_{CC}$: se a tensão cai, encolhe o caminho que o
+capacitor precisa percorrer, mas a corrente que o carrega também cai na mesma proporção.
+Os dois efeitos se compensam, e o tempo, $\tau\ln 2$, não muda.
+\end{dicaprof}
+
+\begin{medir}
+\begin{itemize}[leftmargin=*]
+  \item Osciloscópio no pino 2 ou 6 (são o mesmo nó): exponencial subindo e descendo
+  entre cerca de \SI{1}{\volt} e \SI{2}{\volt} (com $V_{CC} = \SI{3}{\volt}$).
+  \item Osciloscópio ou frequencímetro no pino 3: onda quadrada de cerca de
+  \SI{6,8}{\hertz}, com nível alto ligeiramente maior que o baixo.
+  \item Frequência muito acima disso: suspeite de C2 (cerâmico que perdeu capacitância
+  com a tensão aplicada, achado A4). Sem oscilação: NE555 abaixo da tensão mínima (A1).
+  \item Amplitude de só cerca de \SI{1,7}{\volt} no pino 3: é o NE555 a \SI{3}{\volt}.
+  Ele oscila, mas esse nível alto não chega ao que o CD4017B reconhece, e o contador pode
+  não avançar (A1).
+\end{itemize}
+\end{medir}
+
+% =============================================================================
+\section{Passo 3 — bloco contador/decodificador (CD4017B)}
+% =============================================================================
+\begin{figure}[H]
+\centering
+\diagramaBlocos[todosapagados, b3/.style={destaque}]
+\end{figure}
+
+\textbf{Entra:} o clock no pino 14 e o RESET no pino 15. \textbf{Sai:} as dez saídas
+Q0 a Q9, das quais só uma fica em nível alto por vez.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{\cdInterno}
+\caption{O CD4017B por dentro (modelo lógico equivalente).}
+\end{figure}
+
+\textbf{Como funciona.} O clock passa primeiro por um gatilho Schmitt, que limpa bordas
+lentas, e por uma porta de habilitação: com CLOCK INHIBIT (pino 13) no GND, toda borda de
+\textbf{subida} avança a contagem~\cite{cd4017}. A contagem fica guardada num contador
+Johnson de 5 flip-flops ligados em anel, em que o último devolve o seu complemento ao
+primeiro. Com 5 estágios, esse anel percorre 10 estados, e cada estado difere do vizinho
+em um bit só. O decodificador olha pares de estágios vizinhos e liga exatamente uma das
+dez saídas.
+
+\begin{center}
+\small
+\begin{tabular}{@{}c c c c@{}}
+\toprule
+\textbf{Contagem} & \textbf{Estados A B C D E} & \textbf{Saída alta (pino)} & \textbf{LED} \\
+\midrule
+0 & 0 0 0 0 0 & Q0 (3) & D1 \\
+1 & 1 0 0 0 0 & Q1 (2) & D2 \\
+2 & 1 1 0 0 0 & Q2 (4) & D3 \\
+3 & 1 1 1 0 0 & Q3 (7) & D4 \\
+4 & 1 1 1 1 0 & Q4 (10) & D5 \\
+5 & 1 1 1 1 1 & Q5 (1) & D6 \\
+6 & 0 1 1 1 1 & Q6 (5) & aciona o RESET \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{dicaprof}
+Olhe a coluna dos pinos: Q0 é o pino 3, Q1 é o 2, Q5 é o 1. As saídas do 4017
+\textbf{não seguem a ordem física dos pinos}. Quem roteia a placa pela ordem dos pinos
+acende os LEDs fora de sequência. Confira sempre pela tabela do datasheet.
+\end{dicaprof}
+
+\begin{medir}
+\begin{itemize}[leftmargin=*]
+  \item Ponta lógica ou osciloscópio nos pinos 3, 2, 4, 7, 10 e 1: cada um fica alto
+  durante cerca de \SI{147}{\milli\second}, um depois do outro.
+  \item Pinos 6, 9 e 11 (Q7, Q8 e Q9) ficam em nível baixo: em regime, a contagem não
+  passa de 6. O pino 12 (CO) não fica parado: é alto de Q0 a Q4 e baixo durante Q5, uma
+  onda de período \SI{0,88}{\second}.
+  \item Ao ligar, sem reset de energização, o contador pode partir de Q7 a Q9 e ficar até
+  $3T \approx \SI{0,44}{\second}$ com todos os LEDs apagados. É normal.
+  \item Contagem pulando passos: suspeite de clock falso causado por queda de VCC
+  (falta de desacoplamento, achado A2).
+\end{itemize}
+\end{medir}
+
+% =============================================================================
+\section{Passo 4 — bloco de realimentação (módulo 6)}
+% =============================================================================
+\begin{figure}[H]
+\centering
+\diagramaBlocos[todosapagados, b4/.style={destaque}]
+\end{figure}
+
+\textbf{Entra:} a saída Q6 (pino 5). \textbf{Sai:} o RESET (pino 15). É um bloco sem
+componente: é só um fio. Mesmo assim, é ele que decide quantos LEDs existem na sequência.
+
+\textbf{O que acontece na sexta borda de clock}, em ordem:
+\begin{enumerate}
+  \item O clock sobe e o contador passa da contagem 5 para a 6: Q5 cai e Q6 sobe.
+  \item Como Q6 está ligado ao RESET, o RESET sobe junto. O RESET do CD4017B é ativo em
+  nível alto e assíncrono: não espera o próximo clock.
+  \item O contador zera: Q0 sobe e Q6 cai. Com Q6 baixo, o RESET também cai.
+\end{enumerate}
+Tudo isso dura algumas centenas de nanossegundos (o atraso RESET\,$\to$\,saída é de
+\SI{265}{\nano\second} típicos a \SI{5}{\volt}~\cite{cd4017}). Para o olho, D6 apaga e
+D1 acende no mesmo instante. Por isso a sequência tem 6 passos e não 7: o “passo 6” existe
+só por um piscar elétrico.
+
+\begin{dicaprof}
+Regra geral para o 4017: para uma sequência de $N$ passos ($N < 10$), ligue a saída
+$Q_N$ ao RESET. Para 6 LEDs, $Q_6$; para 4 LEDs, $Q_4$. Com $N = 10$ não precisa
+de realimentação. O datasheet mostra ainda uma versão mais robusta, com um flip-flop S-R
+que garante a largura do pulso de reset (Fig.~18 do datasheet).
+\end{dicaprof}
+
+\begin{medir}
+\begin{itemize}[leftmargin=*]
+  \item Osciloscópio no pino 15, em disparo único pela borda de subida: um pulso de
+  centenas de nanossegundos a cada \SI{0,88}{\second}. No multímetro, esse pino mostra
+  \SI{0}{\volt}: o pulso é curto demais para aparecer na média.
+\end{itemize}
+\end{medir}
+
+% =============================================================================
+\section{Passo 5 — bloco de indicação (LEDs)}
+% =============================================================================
+\begin{figure}[H]
+\centering
+\diagramaBlocos[todosapagados, b5/.style={destaque}]
+\end{figure}
+
+\textbf{Entra:} Q0 a Q5. \textbf{Sai:} luz, sempre em um LED por vez.
+
+\textbf{Como funciona.} Cada saída do CD4017B alimenta o anodo de um LED; os seis catodos
+se juntam e vão ao GND por um único resistor, R3 (\SI{120}{\ohm}). Funciona porque o
+decodificador garante que só uma saída está alta em cada instante: só um LED conduz, e o
+brilho sai igual para todos. A corrente fica entre 0,5 e \SI{1,5}{\milli\ampere}, limitada
+principalmente pela própria saída CMOS. Por isso o LED precisa ser de baixa tensão direta:
+verde GaP, com \SI{2,2}{\volt} típicos a \SI{20}{\milli\ampere} e cerca de 1,8 a
+\SI{1,9}{\volt} na corrente deste circuito~\cite{kingbright}.
+
+\begin{figure}[H]
+\centering
+\filmeLEDs
+\caption{A sequência quadro a quadro. Cada quadro dura um período $T\approx\SI{0,15}{\second}$.}
+\end{figure}
+
+\begin{medir}
+\begin{itemize}[leftmargin=*]
+  \item Multímetro sobre R3: a tensão dividida por \SI{120}{\ohm} dá a corrente do LED
+  aceso. Entre 0,06 e \SI{0,18}{\volt}, a corrente fica entre 0,5 e \SI{1,5}{\milli\ampere}.
+  \item Um LED que nunca acende: confira a polaridade (anodo do lado da saída do 4017) e
+  a tensão direta do modelo escolhido (achado A5).
+\end{itemize}
+\end{medir}
+
+% =============================================================================
+\section{Passo 6 — integração: o diagrama de tempos}
+% =============================================================================
+Agora junte os blocos. O diagrama de tempos mostra, no mesmo eixo, a tensão no capacitor
+(bloco 2), o clock, as saídas Q0 a Q5 (blocos 3 e 5) e o pulso de reset (bloco 4).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figuras/tempos-a4.pdf}
+\caption{Diagrama de tempos em regime permanente (pulso de reset fora de escala).}
+\end{figure}
+
+\textbf{Como ler.} Cada linha vertical cinza é uma borda de subida do clock. Em cada
+uma, uma saída do contador desce e a seguinte sobe. Siga Q0: ela fica alta de $0$ a $T$,
+volta a subir em $6T$ e o ciclo se repete. A volta completa leva $6T \approx
+\SI{0,88}{\second}$.
+
+% =============================================================================
+\begin{landscape}
+\section{Passo 7 — do diagrama de blocos ao esquemático}
+\begin{center}
+\esquematico[blocos]
+\end{center}
+\small
+\textbf{Como os blocos aparecem na folha original do Altium.} No print, a alimentação
+ocupa as zonas 1A–1B, o oscilador 1C–2D, o contador 3A–3B e os LEDs 4A–4C (coluna e linha,
+como na notação do Altium). A
+ligação entre os blocos 2 e 3 é
+feita por duas portas chamadas \texttt{OUT555}: uma no pino 3 do NE555 e outra no pino
+14 do CD4017B. Portas de mesmo nome se conectam; a anotação \texttt{Sheet1[2A]} ao lado de
+uma porta é a referência cruzada do Altium, que aponta a zona da folha onde está a porta
+par~\cite{altium}. No redesenho acima, as portas viraram um fio direto em azul petróleo.
+\end{landscape}
+
+% =============================================================================
+\section{Passo 8 — roteiro de bancada}
+% =============================================================================
+Na ordem em que vale a pena testar, do bloco 1 ao 5:
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}L{2.9cm} L{2.2cm} L{4.0cm} Y@{}}
+\toprule
+\textbf{Ponto} & \textbf{Instrumento} & \textbf{Esperado} & \textbf{Se não bater} \\
+\midrule
+VCC (SW1-2, U1-8, U2-16) & multímetro & $\approx$\SI{3}{\volt}; \SI{0}{\volt} com a chave desligada & bateria, chave ou contato negativo do suporte \\
+U1-2/U1-6 ($v_C$) & osciloscópio & exponencial entre $\approx$1 e \SI{2}{\volt} & sem oscilação: 555 abaixo da tensão mínima (A1) \\
+U1-3 (OUT555) & osciloscópio & quadrada de $\approx$\SI{6,8}{\hertz}, $D\approx\SI{53}{\percent}$ & frequência alta: C2 com capacitância efetiva menor (A4); amplitude de só $\approx$\SI{1,7}{\volt}: o 4017 pode não contar (A1) \\
+U2-14 (CLK) & osciloscópio & igual a U1-3 & trilha interrompida ou solda fria \\
+U2-3, 2, 4, 7, 10, 1 & ponta lógica & um pulso de $\approx$\SI{147}{\milli\second} por saída, em sequência & passos pulados: desacoplamento (A2) \\
+U2-15 (RESET) & osciloscópio, disparo único & pulso de centenas de ns a cada \SI{0,88}{\second} & sem pulso: ligação Q6–RESET \\
+Sobre R3 & multímetro & 0,06 a \SI{0,18}{\volt} (0,5 a \SI{1,5}{\milli\ampere}) & LED invertido ou de Vf alta (A5) \\
+Consumo total & multímetro em série & 3,68 a \SI{5,73}{\milli\ampere} com NE555 (estimado) & muito acima: curto ou componente invertido \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{resposta}[Resumo do tutorial]
+\textbf{1} A bateria e a chave entregam VCC. \textbf{2} O 555 transforma VCC em clock
+de $\approx$\SI{6,8}{\hertz}, carregando e descarregando C2 entre $V_{CC}/3$ e
+$2V_{CC}/3$. \textbf{3} O CD4017B avança uma saída por borda de subida. \textbf{4} Q6
+reseta o contador e fecha a volta em seis passos. \textbf{5} Cada saída acende um LED,
+todos pelo mesmo R3, e a luz “corre” uma volta a cada \SI{0,88}{\second}.
+\end{resposta}
+
+\section*{Referências}
+\addcontentsline{toc}{section}{Referências}
+\listaReferencias
+
+\end{document}

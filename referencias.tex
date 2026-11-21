@@ -1,0 +1,122 @@
+% =============================================================================
+%  referencias.tex — fontes verificadas (datasheets lidos nos PDFs oficiais
+%  em 20–21/11/2026) e trechos de especificação reutilizados no texto.
+% =============================================================================
+
+% ---------------------------------------------------------------- trechos
+\newcommand{\DSbat}{tensão nominal de \SI{3}{\volt} e corte em \SI{2}{\volt};
+capacidade de \SI{225}{\milli\ampere\hour} (Panasonic) a \SI{254}{\milli\ampere\hour}
+(Energizer, carga de \SI{15}{\kilo\ohm} até \SI{2}{\volt}, \SI{21}{\celsius}). Essa
+capacidade é especificada com dreno contínuo de cerca de \SI{0,2}{\milli\ampere}; a
+resistência interna da célula nova fica perto de \SI{10}{\ohm}~\cite{cr2032pan,cr2032en,enerman}.}
+
+\newcommand{\DSsuporte}{o suporte faz o contato positivo pelo próprio corpo metálico,
+soldado em quatro ilhas laterais (duas de cada lado, no footprint recomendado); o
+negativo é uma \textbf{ilha circular de cobre de \SI{18}{\milli\meter} de diâmetro na
+própria placa}, sob a bateria, que precisa ficar exposta e ligada ao GND. O desenho do
+fabricante é para CR2032 (o catálogo também lista a CR2025)~\cite{bathld}.}
+
+\newcommand{\DSsw}{SPDT, \SI{300}{\milli\ampere} a \SI{6}{\volt} CC, vida mecânica de
+\num{10000} ciclos e operação de \SIrange{-20}{85}{\celsius}, segundo distribuidores. O
+PDF do fabricante (C\&K, hoje Littelfuse) não pôde ser lido na verificação; por isso o
+terminal comum e o significado do sufixo SMTR ficam sem confirmação. A DigiKey marca a
+peça como obsoleta~\cite{pcm12}.}
+
+\newcommand{\DSneEnc}{SOIC-8 (sufixo D); o R final indica carretel de 2500 unidades. A
+versão em tubo (NE555D) consta como obsoleta~\cite{ne555}.}
+
+\newcommand{\DSne}{VCC recomendada de \SIrange{4,5}{16}{\volt}; consumo sem carga a
+\SI{5}{\volt} de \SI{3}{\milli\ampere} típicos e \SI{6}{\milli\ampere} máximos com a saída
+baixa (\SI{2}{\milli\ampere} e \SI{5}{\milli\ampere} com a saída alta); limiares de cerca de
+$2V_{CC}/3$ (THRES) e $V_{CC}/3$ (TRIG); RESET ativo abaixo de 0,3 a \SI{1}{\volt}, e o
+datasheet manda ligá-lo ao VCC quando não usado; saída de até \SI{200}{\milli\ampere};
+\SI{0,01}{\micro\farad} no CONT no circuito astável de referência; desacoplamento do VCC
+com cerâmico de \SI{0,1}{\micro\farad}; operação de \SIrange{0}{70}{\celsius}~\cite{ne555}.}
+
+\newcommand{\DScdEnc}{SOIC-16 (sufixo M); o 96 indica carretel de 2500 unidades. A
+versão em tubo (CD4017BM) consta como obsoleta~\cite{cd4017}.}
+
+\newcommand{\DScd}{VDD recomendada de \SIrange{3}{18}{\volt}; avança na borda de subida
+do CLOCK com CLOCK INHIBIT em nível baixo; gatilho Schmitt na entrada de clock, que aceita
+bordas lentas; RESET ativo em nível alto, que leva a contagem a zero. A \SI{5}{\volt}:
+clock máximo de \SI{2,5}{\mega\hertz} (mín.) e \SI{5}{\mega\hertz} (típ.), atraso
+RESET\,$\to$\,saída de \SI{265}{\nano\second} típicos e \SI{530}{\nano\second} máximos,
+largura mínima recomendada do pulso de reset de \SI{260}{\nano\second} e corrente
+quiescente máxima de \SI{5}{\micro\ampere} a \SI{25}{\celsius}. O datasheet não tem
+tabelas a \SI{3}{\volt}, só a 5, 10 e \SI{15}{\volt}~\cite{cd4017}.}
+
+\newcommand{\DScap}{Exemplo de código: Murata GRM21BR61A106KE19 (\SI{10}{\micro\farad}
+$\pm$\SI{10}{\percent}, X5R, \SI{10}{\volt})~\cite{murata}. A perda de capacitância com
+tensão contínua aplicada varia de modelo para modelo e deve ser lida na curva do
+fabricante.}
+
+\newcommand{\DSres}{exemplo: Yageo série RC, RC0805 com \SI{0,125}{\watt} a
+\SI{70}{\celsius} e \SI{150}{\volt} de tensão máxima de trabalho~\cite{yageo}.}
+
+\newcommand{\DSled}{Dois LEDs 0805 do mesmo fabricante mostram a diferença que importa:
+o Kingbright APT2012SGC (GaP, \SI{568}{\nano\meter}) tem Vf de \SI{2,2}{\volt} típicos e
+\SI{2,5}{\volt} máximos a \SI{20}{\milli\ampere}; o APT2012ZGC (InGaN, \SI{525}{\nano\meter})
+tem \SI{3,3}{\volt} típicos e \SI{4,1}{\volt} máximos. Os dois admitem \SI{25}{\milli\ampere}
+contínuos~\cite{kingbright}.}
+
+\newcommand{\DSneVcc}{\SIrange{4,5}{16}{\volt}~\cite{ne555}}
+\newcommand{\DScdVdd}{\SIrange{3}{18}{\volt}~\cite{cd4017}}
+\newcommand{\DSswI}{\SI{300}{\milli\ampere} a \SI{6}{\volt} CC (distribuidor)~\cite{pcm12}}
+\newcommand{\DSbatI}{Capacidade especificada com dreno de $\approx$\SI{0,2}{\milli\ampere}; dreno alto reduz a capacidade útil~\cite{cr2032en,enerman}}
+\newcommand{\DScmos}{LMC555: opera a partir de \SI{1,5}{\volt}; TLC555C: a partir de
+\SI{2}{\volt} (a versão TLC555I só a partir de \SI{3}{\volt}); os dois consomem cerca de
+\SI{180}{\micro\ampere} típicos a \SI{5}{\volt} e são pino a pino com o 555~\cite{lmc555,tlc555}}
+\newcommand{\DSledcomp}{APT2012SGC $\times$ APT2012ZGC~\cite{kingbright}}
+\newcommand{\DSaltium}{\cite{altium}}
+
+% ---------------------------------------------------------------- lista
+\newcommand{\listaReferencias}{%
+\begingroup
+\renewcommand{\section}[2]{}%
+\small
+\begin{thebibliography}{99}\setlength{\itemsep}{2pt}
+\bibitem{video} JuliaLabs. \emph{O porquê de eu não usar IA para desenvolver meu
+hardware}. YouTube, 19 nov. 2026. \url{https://www.youtube.com/watch?v=_Q3BPcyTtds}
+(trechos usados: 0:00--3:21, 7:33--10:47 e 12:08).
+\bibitem{ne555} Texas Instruments. \emph{xx555 Precision Timers (NA555, NE555, SA555,
+SE555)}. SLFS022K, rev. mar. 2026. \url{https://www.ti.com/lit/ds/symlink/ne555.pdf}
+\bibitem{cd4017} Texas Instruments. \emph{CD4017B, CD4022B Types: CMOS
+Counter/Dividers}. SCHS027C, rev. fev. 2004. \url{https://www.ti.com/lit/ds/symlink/cd4017b.pdf}
+\bibitem{tlc555} Texas Instruments. \emph{TLC555 CMOS Timer}. SLFS043K, rev. jan. 2026.
+\url{https://www.ti.com/lit/ds/symlink/tlc555.pdf}
+\bibitem{lmc555} Texas Instruments. \emph{LMC555 CMOS Timer}. SNAS558O, rev. nov. 2026.
+\url{https://www.ti.com/lit/ds/symlink/lmc555.pdf}
+\bibitem{hc4017} Texas Instruments. \emph{CD54HC4017, CD74HC4017: High-Speed CMOS Logic
+Decade Counter/Divider with 10 Decoded Outputs}. SCHS200D, rev. out. 2003.
+\url{https://www.ti.com/lit/ds/symlink/cd74hc4017.pdf}
+\bibitem{attiny} Microchip. \emph{ATtiny13A Data Sheet}. DS40002307A.
+\url{https://ww1.microchip.com/downloads/aemDocuments/documents/MCU08/ProductDocuments/DataSheets/ATtiny13A-Data-Sheet-DS40002307A.pdf}
+\bibitem{cmosin} Texas Instruments. \emph{Implications of Slow or Floating CMOS Inputs}.
+SCBA004E, rev. jul. 2021. \url{https://www.ti.com/lit/an/scba004e/scba004e.pdf}
+\bibitem{bathld} TE Connectivity (Linx). \emph{Customer Drawing C-BAT-HLD-001-XX, rev.
+F1: Battery Holder CR2032 Surface Mount}, 16 jul. 2026. Página do produto:
+\url{https://www.te.com/en/product-BAT-HLD-001.html}
+\bibitem{cr2032pan} Panasonic Energy. \emph{CR2032 Datasheet}, fev. 2026.
+\url{https://energy.panasonic.com/dam/master/pdf/en/datasheet/lithium/CR2032_Datasheet_EN.pdf}
+\bibitem{cr2032en} Energizer. \emph{CR2032 Ultimate Lithium: Product Datasheet}
+(UltimateCR2032EU0920). \url{https://www.data.energizer.com/pdfs/ultimatecr2032EU0920.pdf}
+\bibitem{enerman} Energizer. \emph{Primary Lithium Coin Handbook and Application Manual},
+mai. 2026. \url{https://data.energizer.com/wp-content/uploads/2026/05/Lithium-Coin-app-manual-0526.pdf}
+\bibitem{pcm12} C\&K (Littelfuse). \emph{PCM Series Subminiature Slide Switches}.
+\url{https://www.ckswitches.com/media/1424/pcm.pdf} (não acessível na verificação). Dados
+de distribuidor: \url{https://www.digikey.com/en/products/detail/c-k/PCM12SMTR/1640112}
+\bibitem{kingbright} Kingbright. \emph{APT2012SGC} (DSAA8210, V.18B, 2025) e
+\emph{APT2012ZGC} (DSAE3711, V.14B, 2021).
+\url{https://www.kingbrightusa.com/images/catalog/SPEC/APT2012SGC.pdf} e
+\url{https://www.kingbrightusa.com/images/catalog/SPEC/APT2012ZGC.pdf}
+\bibitem{yageo} Yageo. \emph{General Purpose Chip Resistors, RC\_L Series}, V.14, nov.
+2025. \url{https://yageogroup.com/content/datasheet/asset/file/PYU-RC_GROUP_51_ROHS_L}
+\bibitem{murata} Murata. \emph{Reference Sheets GRM21BR61A106KE19 e GRM216R71H103KA01}.
+\url{https://search.murata.co.jp/Ceramy/image/img/A01X/G101/ENG/GRM21BR61A106KE19-01.pdf}
+e \url{https://search.murata.co.jp/Ceramy/image/img/A01X/G101/ENG/GRM216R71H103KA01-01.pdf}
+\bibitem{altium} Altium. \emph{Multi-sheet \& Hierarchical Designs} e \emph{Project
+Options (Cross References, Net Identifier Scope)}.
+\url{https://www.altium.com/documentation/altium-designer/schematic/multi-sheet-hierarchical-designs}
+e \url{https://www.altium.com/documentation/altium-designer/accessing-defining-managing-project-options}
+\end{thebibliography}
+\endgroup}

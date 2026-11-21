@@ -1,0 +1,82 @@
+% =============================================================================
+%  figuras/pinagem.tex — pinagem ilustrada dos CIs (vista superior, SOIC)
+%  Proporções do encapsulamento SOIC (JEDEC MS-012): corpo 3,9 mm de largura,
+%  passo 1,27 mm; comprimento 4,9 mm (8 pinos) e 9,9 mm (16 pinos).
+%  Escala do desenho: 0,75 cm por mm (≈ 7,5:1). Cor do terminal = rede.
+% =============================================================================
+\def\pgS{0.75}
+\pgfmathsetmacro{\pgP}{1.27*\pgS}     % passo
+\pgfmathsetmacro{\pgBW}{1.95*\pgS}    % meia largura do corpo
+\pgfmathsetmacro{\pgLL}{1.05*\pgS}    % comprimento do terminal fora do corpo
+\pgfmathsetmacro{\pgLH}{0.205*\pgS}   % meia largura do terminal
+% \terminalE{y}{num}{nome}{rede}{cor}  terminal do lado esquerdo
+\newcommand{\terminalE}[5]{%
+  \fill[#5] ({-\pgBW-\pgLL},{#1-\pgLH}) rectangle ({-\pgBW},{#1+\pgLH});
+  \draw[line width=0.4pt, charcoal] ({-\pgBW-\pgLL},{#1-\pgLH}) rectangle ({-\pgBW},{#1+\pgLH});
+  \node[font=\footnotesize\sffamily\bfseries, anchor=east] at ({-\pgBW-\pgLL-0.08},#1) {#2};
+  \node[font=\footnotesize\sffamily, anchor=east] at ({-\pgBW-\pgLL-0.5},#1) {#3};
+  \node[font=\scriptsize\sffamily, anchor=east, text=#5] at ({-\pgBW-\pgLL-2.35},#1) {#4};}
+% \terminalD{y}{num}{nome}{rede}{cor}  terminal do lado direito
+\newcommand{\terminalD}[5]{%
+  \fill[#5] ({\pgBW},{#1-\pgLH}) rectangle ({\pgBW+\pgLL},{#1+\pgLH});
+  \draw[line width=0.4pt, charcoal] ({\pgBW},{#1-\pgLH}) rectangle ({\pgBW+\pgLL},{#1+\pgLH});
+  \node[font=\footnotesize\sffamily\bfseries, anchor=west] at ({\pgBW+\pgLL+0.08},#1) {#2};
+  \node[font=\footnotesize\sffamily, anchor=west] at ({\pgBW+\pgLL+0.5},#1) {#3};
+  \node[font=\scriptsize\sffamily, anchor=west, text=#5] at ({\pgBW+\pgLL+2.35},#1) {#4};}
+% corpo SOIC: \corpoSOIC{meio comprimento em mm}{marcação}{subtítulo}
+\newcommand{\corpoSOIC}[3]{%
+  \pgfmathsetmacro{\pgBL}{#1*\pgS}%
+  \fill[rounded corners=1mm, fill=charcoal!95!black] ({-\pgBW},{-\pgBL}) rectangle ({\pgBW},{\pgBL});
+  \fill[gray!55] ({-\pgBW+0.38},{\pgBL-0.38}) circle (0.13);
+  \node[text=white, font=\small\sffamily\bfseries, rotate=90] at (0,0.15) {#2};
+  \node[text=white!80!gray, font=\scriptsize\sffamily, rotate=90] at (0.55,0.15) {#3};}
+
+% ------------------------------------------------------------------ NE555DR
+\newcommand{\pinagemNE}{%
+\begin{tikzpicture}
+  \corpoSOIC{2.45}{NE555}{D (SOIC-8) · TI}
+  \pgfmathsetmacro{\yA}{1.5*\pgP}\pgfmathsetmacro{\yB}{0.5*\pgP}
+  \pgfmathsetmacro{\yC}{-0.5*\pgP}\pgfmathsetmacro{\yD}{-1.5*\pgP}
+  \terminalE{\yA}{1}{GND}{GND}{charcoal}
+  \terminalE{\yB}{2}{TRIG}{THR (C2, R2)}{black}
+  \terminalE{\yC}{3}{OUT}{OUT555 → U2.14}{petroleo}
+  \terminalE{\yD}{4}{$\overline{\textsf{RESET}}$}{VCC}{redeVcc}
+  \terminalD{\yA}{8}{VCC}{VCC}{redeVcc}
+  \terminalD{\yB}{7}{DISCH}{DIS (R1, R2)}{black}
+  \terminalD{\yC}{6}{THRES}{THR (C2, R2)}{black}
+  \terminalD{\yD}{5}{CONT}{CV (C1 → GND)}{black}
+  \node[font=\footnotesize\sffamily\bfseries, anchor=south] at (0,2.25) {U1 — NE555DR};
+\end{tikzpicture}}
+
+% ------------------------------------------------------------------ CD4017BM96
+\newcommand{\pinagemCD}{%
+\begin{tikzpicture}
+  \corpoSOIC{4.95}{CD4017B}{D/M (SOIC-16) · TI}
+  \foreach \i/\n/\nome/\rede/\cor in {
+      1/1/Q5/{→ D6}/oliva, 2/2/Q1/{→ D2}/oliva, 3/3/Q0/{→ D1}/oliva,
+      4/4/Q2/{→ D3}/oliva, 5/5/Q6/{→ RESET (15)}/douradoEsc, 6/6/Q7/{sem uso}/cinzaNC,
+      7/7/Q3/{→ D4}/oliva, 8/8/VSS/{GND}/charcoal}{
+    \pgfmathsetmacro{\yy}{(4.5-\i)*\pgP}
+    \terminalE{\yy}{\n}{\nome}{\rede}{\cor}
+  }
+  \foreach \i/\n/\nome/\rede/\cor in {
+      1/16/VDD/{VCC}/redeVcc, 2/15/RESET/{← Q6 (5)}/douradoEsc,
+      3/14/CLK/{← OUT555 (U1.3)}/petroleo, 4/13/CLK INH/{GND}/charcoal,
+      5/12/CO/{sem uso}/cinzaNC, 6/11/Q9/{sem uso}/cinzaNC,
+      7/10/Q4/{→ D5}/oliva, 8/9/Q8/{sem uso}/cinzaNC}{
+    \pgfmathsetmacro{\yy}{(4.5-\i)*\pgP}
+    \terminalD{\yy}{\n}{\nome}{\rede}{\cor}
+  }
+  \node[font=\footnotesize\sffamily\bfseries, anchor=south] at (0,4.0) {U2 — CD4017BM96};
+\end{tikzpicture}}
+
+% ------------------------------------------------------------------ legenda de cores
+\newcommand{\legendaRedes}{%
+\begin{tikzpicture}[font=\scriptsize\sffamily]
+  \foreach \cor/\txt/\x in {redeVcc/VCC/0, charcoal/GND/1.45, petroleo/clock (OUT555)/2.9,
+                           douradoEsc/reset (Q6)/5.85, oliva/saídas de LED/8.3,
+                           black/temporização/11.0, cinzaNC/sem uso/13.6}{
+    \fill[\cor] (\x,-0.12) rectangle ++(0.42,0.24);
+    \node[anchor=west] at (\x+0.48,0) {\txt};
+  }
+\end{tikzpicture}}

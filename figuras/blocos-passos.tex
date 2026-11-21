@@ -1,0 +1,15 @@
+% Diagrama de blocos com um bloco destacado por página (imagens do README).
+\documentclass[border=4pt, multi=figura]{standalone}
+\usepackage{projeto-sabado}
+\usepackage[scaled=0.95]{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\input{figuras/blocos.tex}
+\newenvironment{figura}{}{}
+\standaloneenv{figura}
+\begin{document}
+\begin{figura}\diagramaBlocos[todosapagados, b1/.style={destaque}]\end{figura}
+\begin{figura}\diagramaBlocos[todosapagados, b2/.style={destaque}]\end{figura}
+\begin{figura}\diagramaBlocos[todosapagados, b3/.style={destaque}]\end{figura}
+\begin{figura}\diagramaBlocos[todosapagados, b4/.style={destaque}]\end{figura}
+\begin{figura}\diagramaBlocos[todosapagados, b5/.style={destaque}]\end{figura}
+\end{document}

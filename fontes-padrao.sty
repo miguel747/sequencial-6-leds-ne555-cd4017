@@ -1,0 +1,175 @@
+% =============================================================================
+%  fontes-padrao.sty  —  Fontes padronizadas (circuitikz, simbologia AMERICANA)
+%  Biblioteca de macros de fontes (simbologia americana, polaridade travada)
+% -----------------------------------------------------------------------------
+%  Pacote LaTeX com macros de fontes de tensão/corrente de orientação travada,
+%  usado pelos documentos deste repositório via \usepackage{fontes-padrao}.
+% -----------------------------------------------------------------------------
+%  OBJETIVO
+%  Eliminar dois erros recorrentes de geração automática de circuitos:
+%    (1) fonte de tensão com polaridade invertida;
+%    (2) fonte/seta de corrente em sentido contrário ao do enunciado.
+%
+%  SIMBOLOGIA
+%  Usa os componentes AMERICANOS NATIVOS, que já trazem os símbolos embutidos:
+%    • american voltage source  -> círculo com (+)(-) internos
+%    • american current source  -> círculo com seta interna
+%  Não há sinais "+/-" manuais (exceto na CA senoidal, que não possui polaridade
+%  nativa). A renderização é americana INDEPENDENTE da opção global do documento,
+%  porque os nomes completos são usados explicitamente.
+%
+%  CAUSA RAIZ TRAVADA AQUI
+%  No circuitikz o 'american voltage source' nasce com o (+) no terminal de
+%  ORIGEM do to[...]. Desenhando de baixo p/ cima, o default joga o (+) embaixo
+%  — exatamente o bug recorrente. Estes macros já embutem 'invert' onde é preciso
+%  para que o lado do (+) seja o anunciado no NOME do macro. Você nunca decide
+%  orientação nem usa 'invert' à mão: escolhe o macro pelo lado do (+)/seta.
+%
+%  ROTULAGEM (símbolo e valor nos dois lados — padrão l + a)
+%    l = rótulo/símbolo  ·  a = anotação/valor (lado oposto, automático)
+%    Argumento opcional [<valor>] alimenta o 'a='. Ex.: nome de um lado, número
+%    do outro. Vazio => sem anotação.
+%
+%  CONVENÇÃO DE ARGUMENTOS
+%    Verticais   : [<valor>]{x}{y_inf}{y_sup}{<rótulo>}   (desenhado baixo->cima)
+%    Horizontais : [<valor>]{x_esq}{x_dir}{y}{<rótulo>}   (desenhado esq->dir)
+%    <rótulo> entra SEM cifrões (vira $...$).  <valor> entra COMO ESCRITO
+%    (use \SI{12}{\volt}, $12\,\mathrm{V}$, $4\,\Omega$, etc.).
+%
+%  DICA DE LOOK COMPLETO
+%    Para que TODO o circuito fique americano (resistor em ziguezague, etc.),
+%    abra o ambiente com a opção [american]:
+%        \begin{circuitikz}[american, line width=1pt] ... \end{circuitikz}
+%    Com circuitikz carregado com [american] como padrão global,
+%    R/L/C já saem americanos mesmo sem repetir a opção.
+% =============================================================================
+
+\ProvidesPackage{fontes-padrao}[2026/06/27 v1.3 Fontes circuitikz simbologia americana]
+
+\RequirePackage{circuitikz}  % no-op se a família já carregou (com [american])
+\usetikzlibrary{arrows.meta} % ponta Latex de \setaLivre (carga idempotente)
+
+\providecommand{\fonteSepLat}{0.33} % afastamento dos sinais de referência da CA
+\providecommand{\fonteSepSig}{0.58} % meia-distância +...- da CA em torno do centro
+
+% -----------------------------------------------------------------------------
+% TENSÃO CC — círculo americano com (+)(-) nativos
+% -----------------------------------------------------------------------------
+
+% Vertical, (+) em CIMA.    \fonteVcima[<valor>]{x}{y_inf}{y_sup}{<rótulo>}
+\newcommand{\fonteVcima}[5][]{%
+  \draw (#2,#3) to[american voltage source, invert, l={$#5$}, a={#1}] (#2,#4);%
+}
+% Vertical, (+) em BAIXO.   \fonteVbaixo[<valor>]{x}{y_inf}{y_sup}{<rótulo>}
+\newcommand{\fonteVbaixo}[5][]{%
+  \draw (#2,#3) to[american voltage source, l={$#5$}, a={#1}] (#2,#4);%
+}
+% Horizontal, (+) à DIREITA.  \fonteVdir[<valor>]{x_esq}{x_dir}{y}{<rótulo>}
+\newcommand{\fonteVdir}[5][]{%
+  \draw (#2,#4) to[american voltage source, invert, l={$#5$}, a={#1}] (#3,#4);%
+}
+% Horizontal, (+) à ESQUERDA. \fonteVesq[<valor>]{x_esq}{x_dir}{y}{<rótulo>}
+\newcommand{\fonteVesq}[5][]{%
+  \draw (#2,#4) to[american voltage source, l={$#5$}, a={#1}] (#3,#4);%
+}
+
+% -----------------------------------------------------------------------------
+% TENSÃO CONTROLADA — losango americano com (+)(-) nativos
+% -----------------------------------------------------------------------------
+
+% Vertical, (+) em CIMA.   \fonteVCcima[<valor>]{x}{y_inf}{y_sup}{<rótulo>}
+\newcommand{\fonteVCcima}[5][]{%
+  \draw (#2,#3) to[american controlled voltage source, invert, l={$#5$}, a={#1}] (#2,#4);%
+}
+% Vertical, (+) em BAIXO.   \fonteVCbaixo[<valor>]{x}{y_inf}{y_sup}{<rótulo>}
+\newcommand{\fonteVCbaixo}[5][]{%
+  \draw (#2,#3) to[american controlled voltage source, l={$#5$}, a={#1}] (#2,#4);%
+}
+% Horizontal, (+) à DIREITA.  \fonteVCdir[<valor>]{x_esq}{x_dir}{y}{<rótulo>}
+\newcommand{\fonteVCdir}[5][]{%
+  \draw (#2,#4) to[american controlled voltage source, invert, l={$#5$}, a={#1}] (#3,#4);%
+}
+% Horizontal, (+) à ESQUERDA.  \fonteVCesq[<valor>]{x_esq}{x_dir}{y}{<rótulo>}
+\newcommand{\fonteVCesq}[5][]{%
+  \draw (#2,#4) to[american controlled voltage source, l={$#5$}, a={#1}] (#3,#4);%
+}
+
+% -----------------------------------------------------------------------------
+% TENSÃO CA (senoidal) — círculo com seno; polaridade de referência (+)(-)
+% colocada à mão porque o símbolo senoidal NÃO tem polaridade nativa.
+% -----------------------------------------------------------------------------
+
+% Vertical, referência (+) em CIMA.  \fonteCAcima[<valor>]{x}{y_inf}{y_sup}{<rótulo>}
+\newcommand{\fonteCAcima}[5][]{%
+  \draw (#2,#3) to[sV, l={$#5$}, a={#1}] (#2,#4);%
+  \pgfmathsetmacro{\fymid}{(#3+#4)/2}%
+  \node at (#2+\fonteSepLat,\fymid+\fonteSepSig) {\scriptsize$+$};%
+  \node at (#2+\fonteSepLat,\fymid-\fonteSepSig) {\scriptsize$-$};%
+}
+% Vertical, SEM referência de polaridade.  \fonteCAv[<valor>]{x}{y_inf}{y_sup}{<rótulo>}
+\newcommand{\fonteCAv}[5][]{%
+  \draw (#2,#3) to[sV, l={$#5$}, a={#1}] (#2,#4);%
+}
+% Horizontal, SEM referência.  \fonteCAh[<valor>]{x_esq}{x_dir}{y}{<rótulo>}
+\newcommand{\fonteCAh}[5][]{%
+  \draw (#2,#4) to[sV, l={$#5$}, a={#1}] (#3,#4);%
+}
+
+% -----------------------------------------------------------------------------
+% CORRENTE — círculo americano com SETA nativa (sentido = ponta da seta)
+% -----------------------------------------------------------------------------
+
+% Vertical, seta para CIMA.   \fonteIcima[<valor>]{x}{y_inf}{y_sup}{<rótulo>}
+\newcommand{\fonteIcima}[5][]{%
+  \draw (#2,#3) to[american current source, l={$#5$}, a={#1}] (#2,#4);%
+}
+% Vertical, seta para BAIXO.  \fonteIbaixo[<valor>]{x}{y_inf}{y_sup}{<rótulo>}
+\newcommand{\fonteIbaixo}[5][]{%
+  \draw (#2,#3) to[american current source, invert, l={$#5$}, a={#1}] (#2,#4);%
+}
+% Horizontal, seta para DIREITA.  \fonteIdir[<valor>]{x_esq}{x_dir}{y}{<rótulo>}
+\newcommand{\fonteIdir}[5][]{%
+  \draw (#2,#4) to[american current source, l={$#5$}, a={#1}] (#3,#4);%
+}
+% Horizontal, seta para ESQUERDA.  \fonteIesq[<valor>]{x_esq}{x_dir}{y}{<rótulo>}
+\newcommand{\fonteIesq}[5][]{%
+  \draw (#2,#4) to[american current source, invert, l={$#5$}, a={#1}] (#3,#4);%
+}
+% Corrente CONTROLADA (losango), vertical, seta para CIMA.
+% \fonteICcima[<valor>]{x}{y_inf}{y_sup}{<rótulo>}
+\newcommand{\fonteICcima}[5][]{%
+  \draw (#2,#3) to[american controlled current source, l={$#5$}, a={#1}] (#2,#4);%
+}
+% Vertical, seta para BAIXO.  \fonteICbaixo[<valor>]{x}{y_inf}{y_sup}{<rótulo>}
+\newcommand{\fonteICbaixo}[5][]{%
+  \draw (#2,#3) to[american controlled current source, invert, l={$#5$}, a={#1}] (#2,#4);%
+}
+% Horizontal, seta para DIREITA.  \fonteICdir[<valor>]{x_esq}{x_dir}{y}{<rótulo>}
+\newcommand{\fonteICdir}[5][]{%
+  \draw (#2,#4) to[american controlled current source, l={$#5$}, a={#1}] (#3,#4);%
+}
+% Horizontal, seta para ESQUERDA.  \fonteICesq[<valor>]{x_esq}{x_dir}{y}{<rótulo>}
+\newcommand{\fonteICesq}[5][]{%
+  \draw (#2,#4) to[american controlled current source, invert, l={$#5$}, a={#1}] (#3,#4);%
+}
+
+% -----------------------------------------------------------------------------
+% SETA DE CORRENTE EM FIO NU
+% -----------------------------------------------------------------------------
+
+% Desenha O FIO + a seta, no sentido (x1,y1) -> (x2,y2).
+% \setaCorrente{x1}{y1}{x2}{y2}{<rótulo>}
+\newcommand{\setaCorrente}[5]{%
+  \draw (#1,#2) to[short, i={$#5$}] (#3,#4);%
+}
+% Seta FLUTUANTE (NÃO desenha fio) para sobrepor a um fio já existente.
+% \setaLivre[cor]{x1}{y1}{x2}{y2}{<rótulo>}   (cor padrão: red)
+\newcommand{\setaLivre}[6][red]{%
+  \draw[-{Latex[length=2.2mm]},#1] (#2,#3) -- (#4,#5);%
+  \node[#1,font=\small] at ({(#2+#4)/2+0.24},{(#3+#5)/2}) {$#6$};%
+}
+
+\endinput
+% =============================================================================
+%  FIM DE fontes-padrao.sty
+% =============================================================================

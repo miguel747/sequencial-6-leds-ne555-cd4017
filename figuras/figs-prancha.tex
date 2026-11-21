@@ -1,0 +1,19 @@
+% Figuras avulsas para a prancha A3 (uma por página, fonte sem serifa).
+% Ordem das páginas: 1 esquemático, 2 pinagem NE555, 3 pinagem CD4017B,
+% 4 legenda de redes, 5 diagrama de blocos.
+\documentclass[border=2pt, multi=figura]{standalone}
+\usepackage{projeto-sabado}
+\usepackage[scaled=0.95]{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\input{figuras/esquematico.tex}
+\input{figuras/blocos.tex}
+\input{figuras/pinagem.tex}
+\newenvironment{figura}{}{}
+\standaloneenv{figura}
+\begin{document}
+\begin{figura}\esquematico[blocos]\end{figura}
+\begin{figura}\pinagemNE\end{figura}
+\begin{figura}\pinagemCD\end{figura}
+\begin{figura}\legendaRedes\end{figura}
+\begin{figura}\diagramaBlocos\end{figura}
+\end{document}

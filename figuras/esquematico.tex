@@ -1,0 +1,138 @@
+% =============================================================================
+%  figuras/esquematico.tex — redesenho do esquemático "projeto_sabado" (Rev. 01)
+%  Netlist idêntica à do print do Altium, inclusive o resistor órfão R?
+%  (mantido, isolado e marcado para remoção); só a disposição foi reorganizada
+%  para leitura (sinal da esquerda para a direita, VCC em cima, GND embaixo).
+%
+%  Uso:  \esquematico          esquemático limpo
+%        \esquematico[blocos]  com as molduras tracejadas dos blocos funcionais
+%  Cores de rede (sempre com rótulo textual): VCC vermelho, clock petróleo,
+%  reset dourado, saídas de LED oliva; demais em preto.
+% =============================================================================
+\newif\ifesqblocos
+\newcommand{\esquematico}[1][]{%
+\esqblocosfalse
+\def\esqarg{#1}\def\esqblk{blocos}%
+\ifx\esqarg\esqblk\esqblocostrue\fi
+\begin{circuitikz}[american, line width=0.8pt, font=\fontepino]
+\ctikzset{bipoles/length=1.25cm}
+
+% ---------------------------------------------------------------- molduras
+\ifesqblocos
+  \draw[moldurabloco] (-0.35,4.55) rectangle (3.75,10.55);
+  \node[titulobloco, anchor=south west] at (-0.25,4.6) {1 · ALIMENTAÇÃO};
+  \draw[moldurabloco] (4.0,1.55) rectangle (11.95,10.55);
+  \node[titulobloco, anchor=south west] at (4.1,1.6) {2 · OSCILADOR ASTÁVEL};
+  \draw[moldurabloco] (12.1,1.55) rectangle (18.15,10.55);
+  \node[titulobloco, anchor=south west] at (12.2,1.6) {3 · CONTADOR + 4 · RESET (Q6)};
+  \draw[moldurabloco] (18.25,1.55) rectangle (23.45,11.15);
+  \node[titulobloco, anchor=south west] at (18.35,1.6) {5 · INDICAÇÃO};
+\fi
+
+% ---------------------------------------------------------------- VCC
+\draw[redeVcc] (2.85,11.0) -- (15.2,11.0);
+\node[rede, text=redeVcc, anchor=south west] at (2.9,11.0) {VCC};
+
+% ---------------------------------------------------------------- 1 · ALIMENTAÇÃO
+\fonteVcima[{\begin{tabular}{@{}l@{}}CR2032 · 3 V\textsuperscript{\,inf.}\\[-1pt]\scriptsize BAT-HLD-001\\[-2pt]\scriptsize (duas abas +)\end{tabular}}]{1.0}{6.3}{8.5}{\textsf{BT1}}
+\draw (1.0,6.3) -- (1.0,5.6) node[ground]{};
+\draw (1.0,8.5) -- (1.0,10.0) -- (1.5,10.0) node[spdt, anchor=in] (SW) {};
+\node[rede, left] at (1.0,9.3) {BAT+};
+\draw[redeVcc] (SW.out 1) -| (2.85,11.0);
+\draw (SW.out 2) -- ++(0.35,0) coordinate (swnc);
+\marcaNC{swnc}
+\node[font=\fontenum, above left, inner sep=1pt] at (SW.in) {1};
+\node[font=\fontenum, above, inner sep=1pt] at ($(SW.out 1)+(0.15,0)$) {2};
+\node[font=\fontenum, below, inner sep=1.5pt] at (SW.out 2) {3};
+\node[font=\fontepino\bfseries, anchor=north] at ($(SW.out 2)+(-0.1,-0.3)$) {SW1};
+\node[font=\scriptsize\sffamily, anchor=north, text=charcoal, align=center]
+  at ($(SW.out 2)+(-0.1,-0.65)$) {PCM12SMTR\\[-1pt]pinos 4–7 (MNT):\\[-1pt]sem ligação};
+
+% ---------------------------------------------------------------- 2 · OSCILADOR (U1)
+\draw[ci] (7.0,4.6) rectangle (10.0,8.6);
+\pinoC{7.6}{8.6}{8}{VCC}{u1p8}
+\pinoC{9.4}{8.6}{4}{$\overline{\textsf{RESET}}$}{u1p4}
+\pinoE{7.0}{7.8}{7}{DISCH}{u1p7}
+\pinoE{7.0}{6.6}{6}{THRES}{u1p6}
+\pinoE{7.0}{5.4}{2}{TRIG}{u1p2}
+\pinoD{10.0}{6.6}{3}{OUT}{u1p3}
+\pinoB{7.6}{4.6}{1}{GND}{u1p1}
+\pinoB{9.4}{4.6}{5}{CONT}{u1p5}
+\node[align=center, font=\fontepino] at (8.75,7.35) {\textbf{U1}\\NE555DR};
+% alimentação do 555 (RESET amarrado ao VCC)
+\draw[redeVcc] (u1p8) -- (7.6,11.0);
+\draw[redeVcc] (u1p4) -- (9.4,11.0);
+\fill[redeVcc] (7.6,11.0) circle (2.2pt) (9.4,11.0) circle (2.2pt);
+% rede de temporização R1-R2-C2
+\draw (5.0,11.0) to[R, l_={$R_1$}, a^={\SI{1.2}{\kilo\ohm}}] (5.0,7.8);
+\fill[redeVcc] (5.0,11.0) circle (2.2pt);
+\draw (5.0,7.8) to[R, l_={$R_2$}, a^={\SI{10}{\kilo\ohm}}] (5.0,6.0);
+\draw (5.0,6.0) to[C, l_={$C_2$}, a^={\SI{10}{\micro\farad}}] (5.0,2.8) node[ground]{};
+\draw (5.0,7.8) -- (u1p7);
+\draw (5.0,6.0) -- (6.0,6.0);
+\draw (u1p6) -- (6.0,6.6) -- (6.0,5.4) -- (u1p2);
+\node[circ] at (5.0,7.8) {};
+\node[circ] at (5.0,6.0) {};
+\node[circ] at (6.0,6.0) {};
+\node[rede, above] at (5.75,7.8) {DIS};
+\node[rede, below] at (5.5,6.0) {THR};
+% GND e CONT
+\draw (u1p1) -- (7.6,2.8) node[ground]{};
+\draw (u1p5) to[C, l_={$C_1$}, a^={\SI{10}{\nano\farad}}] (9.4,2.8) node[ground]{};
+\node[rede, right] at (9.45,3.85) {CV};
+
+% saída do 555 -> clock do 4017 (porta OUT555 do original)
+\draw[petroleo, line width=1pt] (u1p3) -- (11.8,6.6) -- (11.8,8.6) -- (13.0,8.6);
+\node[rede, text=petroleo, above=1.5pt] at (11.2,6.6) {OUT555};
+
+% ---------------------------------------------------------------- 3 · CONTADOR (U2)
+\draw[ci] (13.6,3.4) rectangle (16.8,9.6);
+\pinoC{15.2}{9.6}{16}{VDD}{u2p16}
+\pinoE{13.6}{8.6}{14}{\hspace{2.2mm}CLK}{u2p14}
+\draw[line width=0.7pt] (13.6,8.75) -- (13.82,8.6) -- (13.6,8.45);
+\pinoE{13.6}{7.6}{13}{CLK INH}{u2p13}
+\pinoE{13.6}{4.4}{8}{VSS}{u2p8}
+\pinoB{16.0}{3.4}{15}{RESET}{u2p15}
+\pinoD{16.8}{9.2}{3}{Q0}{u2q0}
+\pinoD{16.8}{8.7}{2}{Q1}{u2q1}
+\pinoD{16.8}{8.2}{4}{Q2}{u2q2}
+\pinoD{16.8}{7.7}{7}{Q3}{u2q3}
+\pinoD{16.8}{7.2}{10}{Q4}{u2q4}
+\pinoD{16.8}{6.7}{1}{Q5}{u2q5}
+\pinoD{16.8}{6.2}{5}{Q6}{u2q6}
+\pinoD{16.8}{5.7}{6}{Q7}{u2q7}
+\pinoD{16.8}{5.2}{9}{Q8}{u2q8}
+\pinoD{16.8}{4.7}{11}{Q9}{u2q9}
+\pinoD{16.8}{4.2}{12}{CO}{u2co}
+\marcaNC{u2q7}\marcaNC{u2q8}\marcaNC{u2q9}\marcaNC{u2co}
+\node[align=center, font=\fontepino] at (15.15,6.0) {\textbf{U2}\\CD4017BM96};
+\draw[redeVcc] (u2p16) -- (15.2,11.0);
+\draw (u2p13) -- (12.65,7.6) -- (12.65,7.0) node[ground]{};
+\draw (u2p8) -- (12.65,4.4) -- (12.65,3.8) node[ground]{};
+
+% ---------------------------------------------------------------- 4 · REALIMENTAÇÃO Q6 -> RESET
+\draw[douradoEsc, line width=1pt] (u2q6) -- (17.9,6.2) -- (17.9,2.3) -- (16.0,2.3) -- (u2p15);
+\node[rede, text=douradoEsc, above=2pt] at (16.85,2.3) {Q6 → RESET};
+
+% ---------------------------------------------------------------- 5 · INDICAÇÃO (D1..D6, R3)
+\foreach \q/\xj/\yl/\d in {u2q0/18.4/10.45/1, u2q1/18.9/9.45/2, u2q2/19.4/8.45/3,
+                           u2q3/19.4/7.45/4, u2q4/18.9/6.45/5, u2q5/18.4/5.45/6}{
+  \draw[oliva, line width=0.9pt] (\q) -| (\xj,\yl) -- (20.2,\yl);
+  \draw (20.2,\yl) to[led] (21.6,\yl) -- (22.2,\yl);
+  \node[font=\fontepino, anchor=south east, inner sep=1pt] at (20.15,\yl+0.04) {D\d};
+}
+\draw (22.2,10.45) -- (22.2,4.6) to[R, l_={$R_3$}, a^={\SI{120}{\ohm}}] (22.2,3.0) node[ground]{};
+\foreach \yl in {9.45,8.45,7.45,6.45,5.45}{\node[circ] at (22.2,\yl) {};}
+\node[font=\footnotesize\sffamily, text=charcoal, align=center, anchor=north]
+  at (20.55,4.95) {LED verde 0805 (×6)\\[-1pt]anodo (pino 2) à esquerda};
+\node[rede, right=2.5pt] at (22.2,4.85) {LED\_K};
+
+% ---------------------------------------------------------------- resíduo do original
+% resistor RES_0805C sem designador e sem ligação, como no print (deve ser apagado)
+\draw (0.6,3.95) to[R] (0.6,2.35);
+\marcaNC{0.6,3.95}\marcaNC{0.6,2.35}
+\node[font=\fontepino, anchor=west] at (1.0,3.35) {R? (RES\_0805C)};
+\node[font=\scriptsize\sffamily, anchor=west, text=redeVcc] at (1.0,2.9) {solto, sem designador:};
+\node[font=\scriptsize\sffamily, anchor=west, text=redeVcc] at (1.0,2.55) {remover};
+\end{circuitikz}%
+}

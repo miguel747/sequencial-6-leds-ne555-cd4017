@@ -1,0 +1,57 @@
+% =============================================================================
+%  figuras/cd4017-interno.tex — modelo funcional do CD4017B (didático)
+%  Condicionamento de clock (Schmitt) -> contador Johnson de 5 estágios
+%  (realimentação pelo complemento do último estágio) -> decodificador 1-de-10.
+%  Modelo lógico equivalente; a implementação interna do fabricante pode
+%  usar portas diferentes com o mesmo comportamento externo.
+% =============================================================================
+\tikzset{
+  ffj/.style={draw=charcoal, line width=0.8pt, fill=white, minimum width=0.95cm,
+    minimum height=1.05cm, font=\footnotesize\sffamily, align=center, inner sep=1pt},
+  blk/.style={draw=charcoal, line width=0.9pt, fill=white, rounded corners=1.5mm,
+    align=center, font=\footnotesize\sffamily, inner sep=3pt},
+  fio/.style={-{Latex[length=2mm]}, line width=0.8pt},
+}
+\newcommand{\cdInterno}{%
+\begin{tikzpicture}[font=\fontepino]
+  % contorno do CI
+  \draw[ci, rounded corners=1.5mm, fill=douradoClaro!60] (-0.4,-1.15) rectangle (12.5,3.35);
+  \node[font=\fontepino\bfseries, anchor=north west, text=charcoal] at (-0.3,3.3) {CD4017B (U2)};
+  % condicionamento do clock
+  \node[blk, text width=2.1cm, minimum height=1.6cm] (cond) at (0.85,1.2)
+    {Schmitt-trigger\\+ habilitação\\[1pt]\scriptsize avança na borda $\uparrow$ se INH = 0};
+  \draw[fio] (-1.4,1.65) node[left, font=\fontepino, align=right] {14 CLK\\[-1pt]\scriptsize ← OUT555} -- (cond.west |- 0,1.65);
+  \draw[fio] (-1.4,0.75) node[left, font=\fontepino, align=right] {13 CLK INH\\[-1pt]\scriptsize ← GND} -- (cond.west |- 0,0.75);
+  % contador Johnson de 5 estágios
+  \draw[line width=0.8pt, rounded corners=1.5mm, draw=petroleo, fill=petroleoClaro]
+    (2.55,-0.25) rectangle (9.35,2.95);
+  \node[font=\scriptsize\sffamily\bfseries, text=petroleo, anchor=north west] at (2.6,2.92)
+    {contador Johnson de 5 estágios};
+  \foreach \n/\x in {A/3.55, B/4.85, C/6.15, D/7.45, E/8.75}{
+    \node[ffj] (ff\n) at (\x,1.2) {FF \n\\[-1pt]D\enspace Q};
+  }
+  \foreach \a/\b in {A/B, B/C, C/D, D/E}{\draw[fio] (ff\a.east) -- (ff\b.west);}
+  % realimentação: complemento do estágio E volta para o D de A
+  \draw[fio, douradoEsc] (ffE.north) -- ++(0,0.55) -| ($(ffA.west)+(-0.35,0)$) -- (ffA.west);
+  \node[font=\scriptsize\sffamily, text=douradoEsc, above] at (7.6,2.3) {$\overline{E}\rightarrow D_A$};
+  % clock interno para todos os estágios
+  \draw[fio] (cond.east |- 0,0.2) -- (2.95,0.2);
+  \draw[line width=0.6pt, dashed] (2.95,0.2) -- (8.75,0.2);
+  \foreach \x in {3.55,4.85,6.15,7.45,8.75}{\draw[-{Latex[length=1.5mm]}, line width=0.6pt] (\x,0.2) -- (\x,0.67);}
+  \node[font=\footnotesize\sffamily, below] at (5.6,0.18) {clock interno (todos os estágios)};
+  % reset assíncrono
+  \draw[fio, douradoEsc] (5.1,-1.9) node[below, font=\fontepino, align=center] {15 RESET ← Q6 (pino 5)\\[-1pt]\scriptsize assíncrono: força a contagem 0} -- (5.1,-0.25);
+  % decodificador
+  \node[blk, text width=1.75cm, minimum height=3.1cm] (dec) at (11.25,1.35)
+    {decodificador\\1-de-10\\[2pt]\scriptsize 10 portas\\AND de 2\\entradas};
+  \draw[line width=2.2pt, -{Latex[length=2.6mm, width=3.2mm]}] (9.35,1.2) -- node[above=2pt, font=\footnotesize\sffamily] {A…E} (dec.west |- 0,1.2);
+  % saídas
+  \foreach \q/\p/\y in {0/3/2.55, 1/2/2.1, 2/4/1.65, 3/7/1.2, 4/10/0.75, 5/1/0.3, 6/5/-0.15}{
+    \draw[fio, oliva] (dec.east |- 0,\y) -- (12.9,\y);
+    \node[font=\scriptsize\sffamily, right] at (12.9,\y) {Q\q\ (\p)};
+  }
+  \node[font=\scriptsize\sffamily, right, align=left, text=charcoal] at (12.9,-0.75)
+    {Q7 (6), Q8 (9),\\Q9 (11): sem uso};
+  % carry-out
+  \draw[fio, charcoal] (8.75,-0.25) -- (8.75,-1.9) node[below, font=\fontepino, align=center] {12 CO $=\overline{E}$\\[-1pt]\scriptsize sem uso};
+\end{tikzpicture}}

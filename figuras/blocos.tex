@@ -1,0 +1,41 @@
+% =============================================================================
+%  figuras/blocos.tex — diagrama de blocos funcional do sequencial de LEDs
+%  \diagramaBlocos                         todos os blocos em pé de igualdade
+%  \diagramaBlocos[b3/.style={destaque}]   destaca o bloco 3 (usado no tutorial)
+%  \diagramaBlocos[todosapagados, b2/.style={destaque}] apaga os demais
+% =============================================================================
+\tikzset{
+  b1/.style={}, b2/.style={}, b3/.style={}, b4/.style={}, b5/.style={},
+  blocofunc/.style={draw=charcoal, line width=0.8pt, rounded corners=2mm,
+    fill=white, align=center, font=\footnotesize\sffamily, text width=2.75cm,
+    minimum height=2.0cm, inner sep=3pt},
+  destaque/.style={fill=petroleo, draw=petroleo, text=white, line width=1.3pt},
+  apagado/.style={draw=charcoal!35, text=charcoal!45},
+  todosapagados/.style={blocofunc/.append style={apagado}},
+  sinal/.style={-{Latex[length=2.4mm]}, line width=0.95pt, draw=charcoal},
+  energia/.style={dashed, line width=0.9pt, draw=redeVcc},
+  rotsinal/.style={font=\footnotesize\sffamily, align=center, inner sep=1.5pt},
+}
+\newcommand{\diagramaBlocos}[1][]{%
+\begin{tikzpicture}[#1]
+  \node[blocofunc, b1] (b1) at (0,0)
+    {\textbf{1 · Alimentação}\\BT1 (CR2032)\\SW1 liga/desliga};
+  \node[blocofunc, b2] (b2) at (4.5,0)
+    {\textbf{2 · Oscilador}\\U1 NE555\\astável\\$f\approx\SI{6,8}{\hertz}$};
+  \node[blocofunc, b3] (b3) at (9.0,0)
+    {\textbf{3 · Contador}\\U2 CD4017B\\Johnson +\\decodificador};
+  \node[blocofunc, b5] (b5) at (13.5,0)
+    {\textbf{5 · Indicação}\\D1–D6 + R3\\um LED aceso\\por vez};
+  \node[blocofunc, b4, minimum height=1.25cm, text width=3.9cm] (b4) at (9.0,-2.75)
+    {\textbf{4 · Realimentação}\\Q6 $\rightarrow$ RESET (módulo 6)};
+  % ---------------- energia (tracejado): VCC distribuído a U1 e U2
+  \draw[energia] (b1.north) -- ++(0,0.55) coordinate (e0) -- (e0 -| b3.north);
+  \draw[energia, -{Latex[length=2mm]}] (e0 -| b2.north) -- (b2.north);
+  \draw[energia, -{Latex[length=2mm]}] (e0 -| b3.north) -- (b3.north);
+  \node[rotsinal, text=redeVcc, above] at ($(e0)!0.5!(e0 -| b2.north)$) {VCC $\approx$ \SI{3}{\volt}};
+  % ---------------- sinais
+  \draw[sinal] (b2) -- node[rotsinal, above] {CLK} node[rotsinal, below] {OUT555} (b3);
+  \draw[sinal] (b3) -- node[rotsinal, above] {Q0…Q5} node[rotsinal, below] {1 de 6} (b5);
+  \draw[sinal] ([xshift=7mm]b3.south) -- node[rotsinal, right] {Q6} ([xshift=7mm]b4.north);
+  \draw[sinal] ([xshift=-7mm]b4.north) -- node[rotsinal, left] {RESET} ([xshift=-7mm]b3.south);
+\end{tikzpicture}}

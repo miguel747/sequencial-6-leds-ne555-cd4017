@@ -1,0 +1,58 @@
+% =============================================================================
+%  figuras/ne555-interno.tex — modelo funcional interno do 555 (didático)
+%  Divisor de três resistores iguais, dois comparadores, flip-flop S-R,
+%  estágio de saída e transistor de descarga. Pinos com a ligação externa
+%  usada no projeto_sabado.
+% =============================================================================
+\newcommand{\neInterno}{%
+\begin{circuitikz}[american, line width=0.8pt, font=\fontepino]
+\ctikzset{bipoles/length=0.95cm}
+% contorno do CI
+\draw[ci, rounded corners=1.5mm, fill=douradoClaro!60] (3.0,0.4) rectangle (11.2,8.6);
+\node[font=\fontepino\bfseries, anchor=south west, text=charcoal] at (6.2,0.5) {NE555 (U1)};
+% pinos
+\draw (3.8,8.6) -- (3.8,9.2) node[above, font=\fontepino, align=center] {8 VCC\\[-1pt]\scriptsize alimentação};
+\draw (5.4,8.6) -- (5.4,9.2) node[above, font=\fontepino, align=center] {6 THRES\\[-1pt]\scriptsize ← nó THR};
+\draw (8.3,8.6) -- (8.3,9.2) node[above, font=\fontepino, align=center] {4 $\overline{\textsf{RESET}}$\\[-1pt]\scriptsize ← VCC};
+\draw (3.8,0.4) -- (3.8,-0.2) node[below, font=\fontepino, align=center] {1 GND\\[-1pt]\scriptsize referência};
+\draw (5.4,0.4) -- (5.4,-0.2) node[below, font=\fontepino, align=center] {2 TRIG\\[-1pt]\scriptsize ← nó THR};
+\draw (3.0,5.6) -- (2.4,5.6) node[left, font=\fontepino, align=right] {5 CONT\\[-1pt]\scriptsize → C1 → GND};
+\draw (11.2,6.1) -- (11.8,6.1) node[right, font=\fontepino, align=left] {3 OUT\\[-1pt]\scriptsize → CLK de U2};
+\draw (11.2,2.8) -- (11.8,2.8) node[right, font=\fontepino, align=left] {7 DISCH\\[-1pt]\scriptsize ← nó DIS};
+% divisor interno
+\draw (3.8,8.6) to[R, l_={$R$}] (3.8,5.6) to[R, l_={$R$}] (3.8,3.0) to[R, l_={$R$}] (3.8,0.4);
+\node[circ] at (3.8,5.6) {};
+\node[circ] at (3.8,3.0) {};
+\node[font=\scriptsize\sffamily, anchor=south] at (4.45,5.62) {$2V_{CC}/3$};
+\node[font=\scriptsize\sffamily, anchor=south] at (4.45,3.02) {$V_{CC}/3$};
+% comparador A (limiar): + = THRES, - = 2/3 VCC
+\node[op amp, noinv input up, scale=0.8] (cA) at (6.6,6.1) {};
+\draw (5.4,8.6) |- (cA.+);
+\draw (3.8,5.6) -| ($(cA.-)+(-0.35,0)$) -- (cA.-);
+\node[font=\footnotesize\sffamily, above, text=charcoal] at (6.7,6.75) {comp. A (limiar)};
+% comparador B (disparo): + = 1/3 VCC, - = TRIG
+\node[op amp, noinv input up, scale=0.8] (cB) at (6.6,2.5) {};
+\draw (3.8,3.0) -| ($(cB.+)+(-0.35,0)$) -- (cB.+);
+\draw (5.4,0.4) |- (cB.-);
+\node[font=\footnotesize\sffamily, below, text=charcoal] at (6.7,1.85) {comp. B (disparo)};
+% flip-flop S-R
+\draw[line width=0.9pt, fill=white] (8.0,1.9) rectangle (9.3,6.7);
+\node[font=\fontepino\bfseries, rotate=90] at (8.65,4.3) {flip-flop S-R};
+\draw (cA.out) -- (8.0,6.1);  \node[font=\scriptsize\sffamily, right] at (8.0,6.1) {R};
+\draw (cB.out) -- (8.0,2.5);  \node[font=\scriptsize\sffamily, right] at (8.0,2.5) {S};
+\node[font=\scriptsize\sffamily, left] at (9.3,6.1) {$Q$};
+\node[font=\scriptsize\sffamily, left] at (9.3,2.5) {$\overline{Q}$};
+\draw (8.3,8.6) -- (8.3,6.85);
+\draw[fill=white] (8.3,6.78) circle (0.08);
+% estágio de saída (buffer)
+\draw (9.3,6.1) -- (9.7,6.1);
+\draw[line width=0.9pt, fill=white] (9.7,5.75) -- (9.7,6.45) -- (10.45,6.1) -- cycle;
+\draw (10.45,6.1) -- (11.2,6.1);
+\node[font=\footnotesize\sffamily, above, text=charcoal] at (10.05,6.45) {saída};
+% transistor de descarga
+\node[npn, scale=0.85] (Qd) at (10.2,1.75) {};
+\draw (9.3,2.5) -- (9.55,2.5) |- (Qd.B);
+\draw (Qd.C) |- (11.2,2.8);
+\draw (Qd.E) -- ++(0,-0.15) node[ground, scale=0.8]{};
+\node[font=\footnotesize\sffamily, anchor=east, text=charcoal] at (9.45,1.0) {descarga};
+\end{circuitikz}}

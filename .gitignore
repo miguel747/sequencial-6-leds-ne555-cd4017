@@ -1,0 +1,7 @@
+build/
+LEIA-ME.md
+*.aux
+*.log
+*.out
+*.toc
+__pycache__/
